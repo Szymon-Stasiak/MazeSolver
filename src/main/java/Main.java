@@ -2,7 +2,7 @@ import Gui.*;
 
 class Main {
     public static void main(String[] args) {
-        MainView mv = MainView.getInstance();
-        mv.show();
+        Maze maze = new Maze("src/main/resources/maze.txt");
+        maze.printMaze();
     }
 }
