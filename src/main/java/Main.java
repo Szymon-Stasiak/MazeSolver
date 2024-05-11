@@ -1,5 +1,8 @@
-public class Main {
+import Gui.*;
+
+class Main {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        MainView mv = MainView.getInstance();
+        mv.show();
     }
 }
