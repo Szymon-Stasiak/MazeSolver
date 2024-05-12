@@ -63,23 +63,6 @@ public class Maze {
         }
     }
 
-    //test
-    public void printMaze() {
-        for (Vector<Node> row : maze) {
-            for (Node node : row) {
-                if (node.getIsField()) {
-                    System.out.print(" ");
-                    //System.out.print(node.getNeighbours().size());
-                    //System.out.print(node.getX()+ " " + node.getY());
-                } else {
-                    System.out.print("X");
-                }
-            }
-            System.out.println();
-        }
-    }
-
-
     public Vector<Vector<Node>> getMaze() {
         return maze;
     }
@@ -87,7 +70,7 @@ public class Maze {
     public Node getNode(int x, int y) {
         return maze.get(x).get(y);
     }
-
+    
     public Node getStart() {
         return start;
     }

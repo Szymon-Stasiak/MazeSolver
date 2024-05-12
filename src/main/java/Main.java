@@ -1,10 +1,10 @@
 import Maze.Maze;
 import Maze.MazeSolver;
+import Gui.MainView;
 
 class Main {
     public static void main(String[] args) {
-        Maze maze = new Maze("src/main/resources/maze.txt");
-        //maze.printMaze();
-        MazeSolver.solveMaze(maze.getStart(), maze.getEnd(), maze);
+        MainView mv = MainView.getInstance();
+        mv.show();
     }
 }

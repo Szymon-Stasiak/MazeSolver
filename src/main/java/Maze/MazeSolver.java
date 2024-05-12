@@ -13,7 +13,7 @@ public class MazeSolver {
 
     public static void solveMaze(Node start, Node end, Maze maze) {
         makeParentBFS(end, start);
-        printPath(start, end);
+        markPath(start, end);
     }
 
     public static void makeParentBFS(Node start, Node end) {
@@ -36,17 +36,12 @@ public class MazeSolver {
         }
     }
 
-    public static void printPath(Node start, Node end) {
+    public static void markPath(Node start, Node end) {
         Node current = start;
-
-        System.out.println(end.getX() + " " + start.getY());
-
         while (current != end) {
-            System.out.println(current.getX() + " " + current.getY());
             current.setIsPath(true);
             current = current.getParent();
         }
-        System.out.println(end.getX() + " " + end.getY());
         end.setIsPath(true);
 
     }

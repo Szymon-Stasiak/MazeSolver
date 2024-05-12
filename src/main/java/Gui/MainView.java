@@ -1,5 +1,8 @@
 package Gui;
 
+import Maze.Maze;
+import Maze.MazeSolver;
+
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -7,8 +10,12 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+import javax.swing.ProgressMonitor;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.*;
@@ -19,11 +26,10 @@ import java.io.*;
 public class MainView {
     private static MainView instance;
 
-    private String currentImage = null;
-    private ImagePanel centerPanel;
+    private Maze currentMaze = null;
+    private MazePanel centerPanel;
     private JPanel leftPanel;
-
-
+    
     public synchronized static MainView getInstance() {
         if (instance == null) {
             instance = new MainView();
@@ -32,7 +38,6 @@ public class MainView {
     }
 
     private MainView() {
-        currentImage = new String("");
         centerPanel = createCenterView();
         leftPanel = createLeftPanel();
     }
@@ -42,67 +47,97 @@ public class MainView {
 
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
+        JLabel mazeLabel = new JLabel("Current maze:");
+        mazeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mazeLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        mazeLabel.setFont(new Font("Arial", Font.BOLD, 20));
+
         JTextField fileTextField = new JTextField();
         //fileTextField.setAlignmentY(Component.CENTER_ALIGNMENT);
         fileTextField.setEditable(false);
         fileTextField.setFocusable(false);
+        fileTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        fileTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        fileTextField.setAlignmentY(Component.CENTER_ALIGNMENT);
+        fileTextField.setHorizontalAlignment(JTextField.CENTER);
+        fileTextField.setFont(new Font("Arial", Font.PLAIN, 15));
 
-        JButton uploadButton = new JButton("Upload Image");
-        uploadButton.setPreferredSize(new Dimension(150, 25));
+        JButton uploadButton = new JButton("Upload Maze");
         uploadButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Image files", "jpg", "jpeg", "png", "gif");
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt");
                 fileChooser.setFileFilter(filter);
+                fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
                 if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    currentImage = fileChooser.getSelectedFile().getAbsolutePath();
-                    fileTextField.setText(fileChooser.getSelectedFile().getName());
+                    LoadingWindow.show("Loading Maze", () -> {
+                        currentMaze = new Maze(fileChooser.getSelectedFile().getAbsolutePath());
+                        fileTextField.setText(fileChooser.getSelectedFile().getName());
 
-                    updateImage();
+                        updateImage();
+                    });
                 }
             }
         });
+        
+        uploadButton.setFocusable(false);
         uploadButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         uploadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
 
-        fileTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        JButton solveButton = new JButton("Solve Maze");
+        solveButton.setPreferredSize(new Dimension(150, 25));
+        solveButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if(currentMaze == null) return;
+                LoadingWindow.show("Solving Maze", () -> {
+                    MazeSolver.solveMaze(currentMaze.getStart(), currentMaze.getEnd(), currentMaze);
+                    updateImage();
+                });
+            }
+        });
+
+        solveButton.setFocusable(false);
+        solveButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        solveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         
         panel.add(Box.createVerticalGlue());
+        panel.add(mazeLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(fileTextField);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(uploadButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)) );
+        panel.add(solveButton);
         panel.add(Box.createVerticalGlue());
-
-        panel.setBackground(new Color(205, 232, 229));
-        panel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, new Color(122, 178, 178)));
-
+        
+        
+    
+        panel.setBackground(new Color(0xE5E1DA));
+        //panel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, new Color(122, 178, 178)));
         return panel;
     }
 
-    private ImagePanel createCenterView() {
-        ImagePanel panel = new ImagePanel(null);
+    private MazePanel createCenterView() {
+        MazePanel panel = new MazePanel(null);
+        panel.setBackground(new Color(0xFBF9F1));
         panel.addMoveDisplay();     
         panel.addScaleDisplay();
+        panel.addNavigationButtons();
+        panel.addInteractiveImage();
         return panel;
-    }
-
-    public void updateImage() {
-        if(currentImage == null) return;
-        Graphics graphics = centerPanel.getGraphics();
-        BufferedImage image = null;
-
-        try {
-        image = ImageIO.read(new File(currentImage));
-        } catch (IOException e) {
-            e.printStackTrace();    
         }
-        if(image == null) return;
-        
+
+        public void updateImage() {
+        if(currentMaze == null) return;
+        BufferedImage image = GuiUtilities.getInstance().mazeToImage(currentMaze);
         centerPanel.changeImage(image);
     }
 
+
     public void show() {
-        JFrame frame = new JFrame("MainView");
+        JFrame frame = new JFrame("MazeSolver");
         frame.setSize(new Dimension(800, 600));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
