@@ -24,6 +24,8 @@ import java.awt.event.KeyListener;
 import javax.swing.JOptionPane;
 
 public class MazePanel extends JPanel {
+    boolean autoSolve = false;
+
     float dragForce = 1.0f;
     int arrowMoveForce = 25;
     float scaleForce = 0.1f;
@@ -34,6 +36,9 @@ public class MazePanel extends JPanel {
     float scale = 1.0f;
     Point pos = new Point(0, 0);
     Point imgPos = new Point(0, 0);
+
+    Point startNode = null;
+    Point endNode = null;
 
     Point oldMousePos = null;
     Dimension oldPanelSize = new Dimension(0, 0);
@@ -63,6 +68,8 @@ public class MazePanel extends JPanel {
                 repaint();
             }
         });
+
+        
 
         this.addMouseListener(new MouseAdapter() {
             @Override
@@ -107,6 +114,50 @@ public class MazePanel extends JPanel {
         });
     }
 
+    public void setStartNode(Point startNode) {
+        if(this.startNode != null) {       
+            if(!MainView.getInstance().isSolved()) {
+                img.setRGB(this.startNode.x, this.startNode.y, Color.WHITE.getRGB());
+            } else {
+                img.setRGB(this.startNode.x, this.startNode.y, Color.RED.getRGB());
+            }
+        }
+        
+        this.startNode = startNode;
+
+        if(autoSolve) {
+            MainView.getInstance().solveMaze();
+        }
+
+        repaint();
+    }
+
+    public void setEndNode(Point endNode) {
+        if(this.endNode != null) {
+            if(!MainView.getInstance().isSolved()) {
+                img.setRGB(this.endNode.x, this.endNode.y, Color.WHITE.getRGB());
+            } else {
+                img.setRGB(this.endNode.x, this.endNode.y, Color.RED.getRGB());
+            }
+        }
+        
+        this.endNode = endNode;
+
+        if(autoSolve) {
+            MainView.getInstance().solveMaze();
+        }
+
+        repaint();
+    }
+
+    public void setAutoSolve(boolean autoSolve) {
+        if(!MainView.getInstance().isSolved()) {
+            MainView.getInstance().solveMaze();
+        }
+
+        this.autoSolve = autoSolve;
+    }
+
     public void addScaleDisplay() {
         this.addMouseWheelListener(e -> {
             if(img == null) return;
@@ -116,6 +167,8 @@ public class MazePanel extends JPanel {
             scale = newScale;
             repaint();
         });
+
+        
 
         this.addKeyListener(new KeyListener() {
             @Override
@@ -207,15 +260,6 @@ public class MazePanel extends JPanel {
                 if(e.getButton() != MouseEvent.BUTTON3) return;
                 System.out.println("Mouse pressed at: " + e.getPoint());
 
-                String[] options = {"Option 1", "Option 2"};
-                Runnable[] actions = {() -> {
-                    System.out.println("Option 1 selected");
-                }, () -> {
-                    System.out.println("Option 2 selected");
-                }};
-                
-                
-
                 Point mousePos = e.getPoint();
                 int x = (int) ((mousePos.x - imgPos.x) / scale);
                 int y = (int) ((mousePos.y - imgPos.y) / scale);
@@ -226,6 +270,16 @@ public class MazePanel extends JPanel {
 
                 img.setRGB(x, y, Color.GREEN.getRGB());
                 repaint();
+
+                String[] options = {"Set start", "Set end"};
+                Runnable[] actions = {() -> {
+                    System.out.println("New start: " + e.getPoint());
+                    setStartNode(new Point(x, y));
+                }, () -> {
+                    System.out.println("New end: " + e.getPoint());
+                    setEndNode(new Point(x, y));
+                }};
+
                 OptionMenu menu = new OptionMenu("X: " + x + " Y: " + y, e.getPoint(), options, actions, () -> {
                     img.setRGB(x, y, Color.WHITE.getRGB());
                     repaint();
@@ -240,6 +294,17 @@ public class MazePanel extends JPanel {
     public MazePanel(BufferedImage image) {
         super();
         img = image;
+        if(autoSolve) {
+            MainView.getInstance().solveMaze();
+        }
+    }
+
+    public Point getStartNode() {
+        return startNode;
+    }
+
+    public Point getEndNode() {
+        return endNode;
     }
 
     public void rescale() {
@@ -267,11 +332,14 @@ public class MazePanel extends JPanel {
 
     public void changeImage(BufferedImage image) {
         img = image;
+        
         rescale();
     }
 
     private void drawInState(Graphics g) {
         Point trueImgPos = new Point(imgPos.x + pos.x, imgPos.y + pos.y);
+        img.setRGB(startNode.x, startNode.y, Color.magenta.getRGB());
+        img.setRGB(endNode.x, endNode.y, Color.magenta.getRGB());
         g.drawImage(img, trueImgPos.x, trueImgPos.y, (int) (img.getWidth() * scale), (int) (img.getHeight() * scale), null);
     }
 
