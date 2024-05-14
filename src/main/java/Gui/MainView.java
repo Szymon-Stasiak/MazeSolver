@@ -3,7 +3,6 @@ package Gui;
 import Maze.Maze;
 import Maze.MazeSolver;
 import Maze.Node;
-
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -16,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -28,8 +26,10 @@ public class MainView {
     private Maze currentMaze = null;
     private MazePanel centerPanel;
     private JPanel leftPanel;
-    
-    boolean solved = false;
+
+    private String mazeName;
+
+    private boolean solved = false;
 
     public synchronized static MainView getInstance() {
         if (instance == null) {
@@ -43,7 +43,7 @@ public class MainView {
         leftPanel = createLeftPanel();
     }
     
-    private void AddMainButtons(JPanel panel) {
+    private void addMainButtons(JPanel panel) {
         JLabel mazeLabel = new JLabel("Current maze:");
         mazeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         mazeLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
@@ -61,27 +61,13 @@ public class MainView {
         JButton uploadButton = new JButton("Upload Maze");
         uploadButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt");
-                fileChooser.setFileFilter(filter);
-                fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
-                if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    LoadingWindow.show("Loading Maze", () -> {
-                        currentMaze = new Maze(fileChooser.getSelectedFile().getAbsolutePath());
-                        fileTextField.setText(fileChooser.getSelectedFile().getName());
-                        
-                        updateImage();
-                        centerPanel.setStartNode(new Point(currentMaze.getStart().getY(), currentMaze.getStart().getX()));
-                        centerPanel.setEndNode(new Point(currentMaze.getEnd().getY(), currentMaze.getEnd().getX()));
-                    });
-                }
+                uploadMaze(fileTextField);
             }
         });
         
         uploadButton.setFocusable(false);
         uploadButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         uploadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
 
         JButton solveButton = new JButton("Solve Maze");
         solveButton.setPreferredSize(new Dimension(150, 25));
@@ -104,7 +90,7 @@ public class MainView {
         panel.add(solveButton);
     }
 
-    private void AddSettingsButtons(JPanel panel) {
+    private void addSettingsButtons(JPanel panel) {
         JCheckBox autoSolve = new JCheckBox("Auto Solve");
         autoSolve.setFocusable(false);
         autoSolve.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -123,9 +109,9 @@ public class MainView {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         
         panel.add(Box.createVerticalGlue());
-        AddMainButtons(panel);
+        addMainButtons(panel);
         panel.add(Box.createVerticalGlue());
-        //AddSettingsButtons(panel);
+        //addSettingsButtons(panel);
         
         panel.setBackground(new Color(0xE5E1DA));
         return panel;
@@ -139,9 +125,9 @@ public class MainView {
         panel.addNavigationButtons();
         panel.addInteractiveImage();
         return panel;
-        }
+    }
 
-    public void updateImage() {
+    private void updateImage() {
         if(currentMaze == null) return;
         BufferedImage image = GuiUtilities.getInstance().mazeToImage(currentMaze);
         centerPanel.changeImage(image);
@@ -160,6 +146,23 @@ public class MainView {
         });
     }
 
+    private void uploadMaze(JTextField fileTextField) {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
+        if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            LoadingWindow.show("Loading Maze", () -> {
+                currentMaze = new Maze(fileChooser.getSelectedFile().getAbsolutePath());
+                fileTextField.setText(fileChooser.getSelectedFile().getName());
+                
+                updateImage();
+                centerPanel.setStartNode(new Point(currentMaze.getStart().getY(), currentMaze.getStart().getX()));
+                centerPanel.setEndNode(new Point(currentMaze.getEnd().getY(), currentMaze.getEnd().getX()));
+            });
+        }
+    }
+
     public void show() {
         JFrame frame = new JFrame("MazeSolver");
         frame.setSize(new Dimension(800, 600));
@@ -173,7 +176,7 @@ public class MainView {
         frame.setVisible(true);
     }
 
-    boolean isSolved() {
+    public boolean isSolved() {
         return solved;
     }
 }
