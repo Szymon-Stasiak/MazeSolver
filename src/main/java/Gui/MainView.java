@@ -3,8 +3,6 @@ package Gui;
 import Maze.Maze;
 import Maze.MazeSolver;
 import Maze.Node;
-import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -23,13 +21,9 @@ import java.io.*;
 public class MainView {
     private static MainView instance;
 
-    private Maze currentMaze = null;
     private MazePanel centerPanel;
     private JPanel leftPanel;
 
-    private String mazeName;
-
-    private boolean solved = false;
 
     public synchronized static MainView getInstance() {
         if (instance == null) {
@@ -73,7 +67,7 @@ public class MainView {
         solveButton.setPreferredSize(new Dimension(150, 25));
         solveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                solveMaze();
+                centerPanel.solveMaze();
             }
         });
 
@@ -111,54 +105,31 @@ public class MainView {
         panel.add(Box.createVerticalGlue());
         addMainButtons(panel);
         panel.add(Box.createVerticalGlue());
-        //addSettingsButtons(panel);
+        addSettingsButtons(panel);
         
         panel.setBackground(new Color(0xE5E1DA));
         return panel;
     }
 
     private MazePanel createCenterView() {
-        MazePanel panel = new MazePanel(null);
+        MazePanel panel = new MazePanel();
         panel.setBackground(new Color(0xFBF9F1));
         panel.addMoveDisplay();     
         panel.addScaleDisplay();
         panel.addNavigationButtons();
-        panel.addInteractiveImage();
+        panel.addInteractiveMaze();
         return panel;
     }
 
-    private void updateImage() {
-        if(currentMaze == null) return;
-        BufferedImage image = GuiUtilities.getInstance().mazeToImage(currentMaze);
-        centerPanel.changeImage(image);
-    }
-
-    public void solveMaze() {
-        if(currentMaze == null) return;
-
-        LoadingWindow.show("Solving Maze", () -> {
-            if(solved) currentMaze.clearMaze();
-            Node start = currentMaze.getNode(centerPanel.getStartNode().y, centerPanel.getStartNode().x);
-            Node end = currentMaze.getNode(centerPanel.getEndNode().y, centerPanel.getEndNode().x);
-            MazeSolver.solveMaze(start, end, currentMaze);
-            solved = true;
-            updateImage();
-        });
-    }
-
     private void uploadMaze(JTextField fileTextField) {
+        
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt");
         fileChooser.setFileFilter(filter);
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
         if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             LoadingWindow.show("Loading Maze", () -> {
-                currentMaze = new Maze(fileChooser.getSelectedFile().getAbsolutePath());
-                fileTextField.setText(fileChooser.getSelectedFile().getName());
-                
-                updateImage();
-                centerPanel.setStartNode(new Point(currentMaze.getStart().getY(), currentMaze.getStart().getX()));
-                centerPanel.setEndNode(new Point(currentMaze.getEnd().getY(), currentMaze.getEnd().getX()));
+                centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
             });
         }
     }
@@ -174,9 +145,5 @@ public class MainView {
         frame.add(leftPanel, BorderLayout.WEST);
         frame.add(centerPanel, BorderLayout.CENTER);
         frame.setVisible(true);
-    }
-
-    public boolean isSolved() {
-        return solved;
     }
 }
