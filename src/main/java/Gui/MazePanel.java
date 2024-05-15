@@ -1,271 +1,138 @@
 package Gui;
 
+import Maze.*;
 import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public class MazePanel extends JPanel {
+class Pixel {
+    public Point pos;
+    public int rgb;
+
+    public Pixel(int x, int y, int rgb) {
+        this.pos = new Point(x, y);
+        this.rgb = rgb;
+    }
+
+    public Pixel(Point pos, int rgb) {
+        this.pos = pos;
+        this.rgb = rgb;
+    }
+}
+
+public class MazePanel extends ImagePanel {
     //SETTINGS
     private boolean autoSolve = false;
-
-    private float dragForce = 1.0f;
-    private float scaleForce = 0.1f;
-    private int arrowMoveForce = 25;
-
-    //PRIVATE VAR
-    private float scale = 1.0f;
-
-    //HARDCODED SETTINGS
-    private Dimension minSize = new Dimension(10, 10);
-    private Dimension maxSize = new Dimension(100000, 100000);
-
-    //DIMENSION POSITIONS
-    private Point pos = new Point(0, 0);
-    private Point imgPos = new Point(0, 0);
+    private boolean solved = false;
 
     //MAZE POSITIONS
     private Point startNode = null;
     private Point endNode = null;
 
-    //MOUSE POSITION
-    private Point oldMousePos = null;
+    private Point selectPoint = null;
+    private Queue<Pixel> resetRGB = null;
 
-    //LABELS
-    private JLabel posLabel = null;
-    private JLabel scaleLabel = null;
-
-    //IMAGE
-    private BufferedImage img;
+    //MAZE
+    private Maze maze;
 
     public MazePanel() {
         super();
-        img = null;
+        resetRGB = new LinkedList<>();
+        maze = null;
     }
 
-    //ADD MOVE TO IMAGE DISPLAY
-    public void addMoveDisplay() {
-        this.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (img == null)
-                    return;
-                if (oldMousePos == null) {
-                    oldMousePos = e.getPoint();
-                    return;
-                }
+    private Point nodeToPoint(Node node) {
+        return new Point(node.getY(), node.getX());
+    }
 
-                imgPos.translate((int) ((e.getX() - oldMousePos.x) * dragForce),
-                        (int) ((e.getY() - oldMousePos.y) * dragForce));
-                oldMousePos = e.getPoint();
-                repaint();
-            }
-        });
+    private Node pointToNode(Point point) {
+        if(maze == null) return null;
+        return maze.getNode(point.y, point.x);
+    }
 
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                oldMousePos = null;
-            }
-        });
+    public void changeMaze(Maze maze) {
+        this.maze = maze;
+        solved = false;
+        startNode = nodeToPoint(maze.getStart());
+        endNode = nodeToPoint(maze.getEnd());
+        resetRGB.clear();
+        if(autoSolve) solveMaze();
+        else changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+    }
 
-        this.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                switch (keyCode) {
-                    case KeyEvent.VK_UP:
-                        imgPos.translate(0, 1 * arrowMoveForce);
-                        repaint();
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        imgPos.translate(0, -1 * arrowMoveForce);
-                        repaint();
-                        break;
-                    case KeyEvent.VK_LEFT:
-                        imgPos.translate(1 * arrowMoveForce, 0);
-                        repaint();
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        imgPos.translate(-1 * arrowMoveForce, 0);
-                        repaint();
-                        break;
-                }
-            }
+    public void solveMaze() {
+        LoadingWindow.show("Solving maze",  () -> {
+            if (maze == null) return;
+            maze.clearMaze();
+            MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
+            changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+            solved = true;
         });
     }
 
     //SET NEW START
     public void setStartNode(Point startNode) {
-        if (this.startNode != null) {
-            if (!MainView.getInstance().isSolved()) {
-                img.setRGB(this.startNode.x, this.startNode.y, Color.WHITE.getRGB());
-            } else {
-                img.setRGB(this.startNode.x, this.startNode.y, Color.RED.getRGB());
-            }
+        if(solved) {
+            resetRGB.add(new Pixel(this.startNode, Color.RED.getRGB()));
+        } else {
+            resetRGB.add(new Pixel(this.startNode, Color.WHITE.getRGB()));
         }
 
         this.startNode = startNode;
-
-        if (autoSolve) {
-            MainView.getInstance().solveMaze();
-        }
-
-        repaint();
+        if(autoSolve) solveMaze();
+        else repaint();
     }
 
     //SET NEW END
     public void setEndNode(Point endNode) {
-        if (this.endNode != null) {
-            if (!MainView.getInstance().isSolved()) {
-                img.setRGB(this.endNode.x, this.endNode.y, Color.WHITE.getRGB());
-            } else {
-                img.setRGB(this.endNode.x, this.endNode.y, Color.RED.getRGB());
-            }
+        if(solved) {
+            resetRGB.add(new Pixel(this.endNode, Color.RED.getRGB()));
+        } else {
+            resetRGB.add(new Pixel(this.endNode, Color.WHITE.getRGB()));
         }
 
         this.endNode = endNode;
-
-        if (autoSolve) {
-            MainView.getInstance().solveMaze();
-        }
-
-        repaint();
+        if(autoSolve) solveMaze();
+        else repaint();
     }
 
     //SET AUTOSOLVE
     public void setAutoSolve(boolean autoSolve) {
-        if (!MainView.getInstance().isSolved()) {
-            MainView.getInstance().solveMaze();
-        }
-
         this.autoSolve = autoSolve;
     }
 
-    //ADD SCALING TO IMAGE DISPLAY
-    public void addScaleDisplay() {
-        this.addMouseWheelListener(e -> {
-            if (img == null)
-                return;
-            float newScale = scale + scale * (float) e.getWheelRotation() * scaleForce;
-            if (newScale * img.getWidth() < minSize.width || newScale * img.getHeight() < minSize.height
-                    || newScale * img.getWidth() > maxSize.getWidth()
-                    || newScale * img.getHeight() > maxSize.getHeight())
-                return;
-            scale = newScale;
-            repaint();
-        });
-
-        this.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                float newScale = 0;
-                switch (keyCode) {
-                    case KeyEvent.VK_Z:
-                        if (img == null)
-                            return;
-                        newScale = scale + scale * scaleForce;
-                        if (newScale * img.getWidth() < minSize.width || newScale * img.getHeight() < minSize.height
-                                || newScale * img.getWidth() > maxSize.getWidth()
-                                || newScale * img.getHeight() > maxSize.getHeight())
-                            return;
-                        scale = newScale;
-                        repaint();
-                        break;
-                    case KeyEvent.VK_X:
-                        if (img == null)
-                            return;
-                        newScale = scale - scale * scaleForce;
-                        if (newScale * img.getWidth() < minSize.width || newScale * img.getHeight() < minSize.height
-                                || newScale * img.getWidth() > maxSize.getWidth()
-                                || newScale * img.getHeight() > maxSize.getHeight())
-                            return;
-                        scale = newScale;
-                        repaint();
-                        break;
-                }
-            }
-        });
-    }
-
-    //UPDATE INFO LABELS
-    public void updateLabels() {
-        if (posLabel == null || scaleLabel == null)
-            return;
-        posLabel.setText("X: " + imgPos.x + " Y: " + imgPos.y);
-        scaleLabel.setText("  Scale: " + scale + "  ");
-    }
-
-    //ADD NAVIGATION BUTTONS + NAVIGATION LABELS
-    public void addNavigationButtons() {
-        setLayout(new BorderLayout());
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-
-        posLabel = new JLabel("X: " + pos.x + " Y: " + pos.y);
-        scaleLabel = new JLabel("  Scale: " + scale + "  ");
-
-        buttonPanel.add(posLabel);
-        buttonPanel.add(scaleLabel);
-
-        JButton rescaleButton = new JButton();
-        ImageIcon searchIcon = new ImageIcon("C:\\Users\\golas\\JIMP\\MazeSolver\\src\\main\\graphics\\search.png");
-        searchIcon.setImage(searchIcon.getImage().getScaledInstance(38, 38, Image.SCALE_SMOOTH));
-        rescaleButton.setIcon(searchIcon);
-        rescaleButton.setPreferredSize(new Dimension(40, 40));
-        rescaleButton.setOpaque(false);
-        rescaleButton.setContentAreaFilled(false);
-        rescaleButton.setBorderPainted(false);
-        rescaleButton.setFocusable(false);
-        rescaleButton.addActionListener(e -> {
-            rescale();
-        });
-
-        this.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "rescaleButtonPressed");
-        this.getActionMap().put("rescaleButtonPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                rescaleButton.doClick();
-            }
-        });
-
-        buttonPanel.add(rescaleButton);
-        buttonPanel.setBackground(new Color(0xAAD7D9));
-
-        add(buttonPanel, BorderLayout.SOUTH);
-    }
-
     //ADD INTERACTIONS TO IMAGE
-    public void addInteractiveImage() {
+    public void addInteractiveMaze() {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (img == null)
+                if (!imageLoaded())
                     return;
+
                 if (e.getButton() != MouseEvent.BUTTON3)
                     return;
 
-                Point mousePos = e.getPoint();
-                int x = (int) ((mousePos.x - imgPos.x) / scale);
-                int y = (int) ((mousePos.y - imgPos.y) / scale);
+                Point mazePos = panelToPixelPos(e.getPoint());
 
-                if (img.getRGB(x, y) != Color.white.getRGB()) {
+                if (!pointToNode(mazePos).getIsField() || mazePos.equals(startNode) || mazePos.equals(endNode)){
                     return;
                 }
 
-                img.setRGB(x, y, Color.GREEN.getRGB());
+                selectPoint = mazePos;
                 repaint();
 
                 String[] options = { "Set start", "Set end" };
                 Runnable[] actions = { () -> {
-                    setStartNode(new Point(x, y));
+                    setStartNode(mazePos);
                 }, () -> {
-                    setEndNode(new Point(x, y));
+                    setEndNode(mazePos);
                 } };
 
-                OptionMenu menu = new OptionMenu("X: " + x + " Y: " + y, e.getPoint(), options, actions, () -> {
-                    img.setRGB(x, y, Color.WHITE.getRGB());
+                OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, e.getPoint(), options, actions, () -> {
+                    resetRGB.add(new Pixel(selectPoint, Color.WHITE.getRGB()));
+                    selectPoint = null;
                     repaint();
                 });
                 menu.setVisible(true);
@@ -273,14 +140,6 @@ public class MazePanel extends JPanel {
                 repaint();
             }
         });
-    }
-
-    public MazePanel(BufferedImage image) {
-        super();
-        img = image;
-        if (autoSolve) {
-            MainView.getInstance().solveMaze();
-        }
     }
 
     public Point getStartNode() {
@@ -291,49 +150,19 @@ public class MazePanel extends JPanel {
         return endNode;
     }
 
-    //RESCALE TO FIT IMAGE
-    public void rescale() {
-        if (img == null)
-            return;
-        pos.setLocation(0, 0);
+    @Override
+    protected void preDraw(BufferedImage img) {
+        super.preDraw(img);
 
-        float newScale = 1f;
-        if (img.getWidth() > img.getHeight()) {
-            newScale = 0.8f * (float) getWidth() / img.getWidth();
-        } else {
-            newScale = 0.8f * (float) getHeight() / img.getHeight();
+        while(!resetRGB.isEmpty()) {
+            Pixel p = resetRGB.poll();
+            if(p == null || p.pos == null) continue;
+            System.out.println("Deleting: " + p.pos);
+            img.setRGB(p.pos.x, p.pos.y, p.rgb);
         }
 
-        imgPos.setLocation(getWidth() / 2, getHeight() / 2);
-        imgPos.translate((int) ((float) img.getWidth() * newScale / -2f),
-                (int) ((float) img.getHeight() * newScale / -2f));
-
-        scale = newScale;
-        repaint();
-    }
-
-    //CHANGE IMAGE TO NEW
-    public void changeImage(BufferedImage image) {
-        img = image;
-        rescale();
-    }
-
-    //DRAW IN CURRENT STATE
-    private void drawInState(Graphics g) {
-        Point trueImgPos = new Point(imgPos.x + pos.x, imgPos.y + pos.y);
-        img.setRGB(startNode.x, startNode.y, Color.magenta.getRGB());
-        img.setRGB(endNode.x, endNode.y, Color.magenta.getRGB());
-        g.drawImage(img, trueImgPos.x, trueImgPos.y, (int) (img.getWidth() * scale), (int) (img.getHeight() * scale),
-                null);
-    }
-
-    //ADD IMAGE PAINTER TO COMPONENT
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (img == null)
-            return;
-        updateLabels();
-        drawInState(g);
+        if(selectPoint != null) img.setRGB(selectPoint.x, selectPoint.y, Color.GREEN.getRGB());
+        if(startNode != null) img.setRGB(startNode.x, startNode.y, Color.YELLOW.getRGB());
+        if(endNode != null) img.setRGB(endNode.x, endNode.y, Color.BLUE.getRGB());
     }
 }
