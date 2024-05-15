@@ -3,7 +3,6 @@ package Gui;
 import java.awt.Point;
 import java.awt.Toolkit;
 
-import javax.swing.CellEditor;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
@@ -12,8 +11,6 @@ import java.awt.event.AWTEventListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.awt.AWTEvent;
-import java.awt.Color;
-import java.awt.Dimension;
 
 public class OptionMenu extends JPopupMenu {
     String[] options;

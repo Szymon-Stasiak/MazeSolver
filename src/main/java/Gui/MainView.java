@@ -1,8 +1,6 @@
 package Gui;
 
 import Maze.Maze;
-import Maze.MazeSolver;
-import Maze.Node;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -15,7 +13,6 @@ import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
 
 public class MainView {
