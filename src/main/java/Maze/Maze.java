@@ -79,5 +79,13 @@ public class Maze {
         return end;
     }
 
-
+    public void clearMaze() {
+        for (Vector<Node> row : maze) {
+            for (Node node : row) {
+                node.setParent(null);
+                node.setIsVisited(false);
+                node.setIsPath(false);
+            }
+        }
+    }
 }

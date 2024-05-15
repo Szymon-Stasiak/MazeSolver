@@ -3,6 +3,7 @@ package Gui;
 import java.awt.Point;
 import java.awt.Toolkit;
 
+import javax.swing.CellEditor;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
@@ -12,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.awt.AWTEvent;
 import java.awt.Color;
+import java.awt.Dimension;
 
 public class OptionMenu extends JPopupMenu {
     String[] options;
@@ -23,12 +25,15 @@ public class OptionMenu extends JPopupMenu {
         super();
         this.options = options;
 
+
         JLabel label = new JLabel(labelText);
         this.add(label);
         this.addSeparator();
+        label.setAlignmentX(CENTER_ALIGNMENT);
 
         for (int i = 0; i < options.length; i++) {
             JButton button = new JButton(options[i]);
+            button.setAlignmentX(CENTER_ALIGNMENT);
             button.setName(Integer.toString(i));
             button.addActionListener(e -> {
                 actions[Integer.parseInt(((JButton)e.getSource()).getName())].run();
