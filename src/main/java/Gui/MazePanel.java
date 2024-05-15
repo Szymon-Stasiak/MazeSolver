@@ -74,7 +74,7 @@ public class MazePanel extends ImagePanel {
 
     //SET NEW START
     public void setStartNode(Point startNode) {
-        if(solved) {
+        if(solved && !autoSolve) {
             resetRGB.add(new Pixel(this.startNode, Color.RED.getRGB()));
         } else {
             resetRGB.add(new Pixel(this.startNode, Color.WHITE.getRGB()));
@@ -87,7 +87,7 @@ public class MazePanel extends ImagePanel {
 
     //SET NEW END
     public void setEndNode(Point endNode) {
-        if(solved) {
+        if(solved && !autoSolve) {
             resetRGB.add(new Pixel(this.endNode, Color.RED.getRGB()));
         } else {
             resetRGB.add(new Pixel(this.endNode, Color.WHITE.getRGB()));
@@ -100,6 +100,7 @@ public class MazePanel extends ImagePanel {
 
     //SET AUTOSOLVE
     public void setAutoSolve(boolean autoSolve) {
+        if(!solved) solveMaze();
         this.autoSolve = autoSolve;
     }
 
@@ -131,7 +132,11 @@ public class MazePanel extends ImagePanel {
                 } };
 
                 OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, e.getPoint(), options, actions, () -> {
-                    resetRGB.add(new Pixel(selectPoint, Color.WHITE.getRGB()));
+                    if(pointToNode(mazePos).getIsPath()) {
+                        resetRGB.add(new Pixel(mazePos, Color.RED.getRGB()));
+                    } else {
+                        resetRGB.add(new Pixel(mazePos, Color.WHITE.getRGB()));
+                    }
                     selectPoint = null;
                     repaint();
                 });
@@ -157,7 +162,6 @@ public class MazePanel extends ImagePanel {
         while(!resetRGB.isEmpty()) {
             Pixel p = resetRGB.poll();
             if(p == null || p.pos == null) continue;
-            System.out.println("Deleting: " + p.pos);
             img.setRGB(p.pos.x, p.pos.y, p.rgb);
         }
 

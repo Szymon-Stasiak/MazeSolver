@@ -1,7 +1,6 @@
 package Gui;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 
 public class LoadingWindow {    
