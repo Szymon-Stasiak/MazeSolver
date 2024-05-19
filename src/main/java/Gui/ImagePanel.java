@@ -236,4 +236,8 @@ public class ImagePanel extends JPanel {
     public Point panelToPixelPos(Point panelPos) {
         return new Point((int) ((panelPos.x - imgPos.x) / scale), (int) ((panelPos.y - imgPos.y) / scale));
     }
+
+    public BufferedImage getImage() {
+        return img;
+    }
 }

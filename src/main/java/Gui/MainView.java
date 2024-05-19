@@ -1,19 +1,13 @@
 package Gui;
 
 import Maze.Maze;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.*;
+import javax.swing.filechooser.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 public class MainView {
     private static MainView instance;
@@ -72,6 +66,43 @@ public class MainView {
         solveButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         solveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JButton saveButton = new JButton("Save Maze");
+        saveButton.setPreferredSize(new Dimension(150, 25));
+        saveButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (!centerPanel.imageLoaded()) return;
+                BufferedImage img = centerPanel.getImage();
+                JFileChooser fileChooser = new JFileChooser("C:/");
+                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "png"));
+                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "jpg"));
+                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("gif", "gif"));
+                fileChooser.setAcceptAllFileFilterUsed(false);
+
+                if(fileChooser.showDialog(null, "Save") == JFileChooser.APPROVE_OPTION) {
+                    try {
+                        String extension = fileChooser.getFileFilter().getDescription();
+                        File outputfile = new File(fileChooser.getSelectedFile().getAbsolutePath() + "." + extension);
+                        if (outputfile.exists()) {
+                            int result = JOptionPane.showConfirmDialog(null, "The file already exists, do you want to overwrite it?", "File already exists", JOptionPane.YES_NO_OPTION);
+                            if (result == JOptionPane.YES_OPTION) {
+                                outputfile.delete();
+                            } else {
+                                return;
+                            }
+                        }
+                        ImageIO.write(img, extension, outputfile);
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, "Error saving file", "Error", JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        saveButton.setFocusable(false);
+        saveButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        saveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         panel.add(mazeLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(fileTextField);
@@ -79,6 +110,8 @@ public class MainView {
         panel.add(uploadButton);
         panel.add(Box.createRigidArea(new Dimension(0, 10)) );
         panel.add(solveButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)) );
+        panel.add(saveButton);
     }
 
     private void addSettingsButtons(JPanel panel) {
@@ -127,6 +160,7 @@ public class MainView {
         if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             LoadingWindow.show("Loading Maze", () -> {
                 centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
+                fileTextField.setText(fileChooser.getSelectedFile().getName());
             });
         }
     }
