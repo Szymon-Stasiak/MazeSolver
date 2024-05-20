@@ -12,6 +12,8 @@ import javax.imageio.ImageIO;
 public class MainView {
     private static MainView instance;
 
+    private Dimension warningSize = new Dimension(300, 300);
+
     private MazePanel centerPanel;
     private JPanel leftPanel;
 
@@ -71,31 +73,57 @@ public class MainView {
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!centerPanel.imageLoaded()) return;
-                BufferedImage img = centerPanel.getImage();
-                JFileChooser fileChooser = new JFileChooser("C:/");
-                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "png"));
-                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "jpg"));
-                fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("gif", "gif"));
-                fileChooser.setAcceptAllFileFilterUsed(false);
 
-                if(fileChooser.showDialog(null, "Save") == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        String extension = fileChooser.getFileFilter().getDescription();
-                        File outputfile = new File(fileChooser.getSelectedFile().getAbsolutePath() + "." + extension);
-                        if (outputfile.exists()) {
-                            int result = JOptionPane.showConfirmDialog(null, "The file already exists, do you want to overwrite it?", "File already exists", JOptionPane.YES_NO_OPTION);
-                            if (result == JOptionPane.YES_OPTION) {
-                                outputfile.delete();
-                            } else {
-                                return;
+                LoadingWindow loading = new LoadingWindow("Scaling maze") {
+                    private BufferedImage img;
+                    @Override
+                    protected boolean onStart() {
+                        img = centerPanel.getImage();
+
+                        if(img.getWidth() * img.getHeight() > warningSize.width * warningSize.height) {
+                            int result = JOptionPane.showConfirmDialog(null, "The maze is large, do you wish to continue?", "Warning", JOptionPane.YES_NO_OPTION);
+                            if (result == JOptionPane.NO_OPTION) {
+                                return false;
                             }
                         }
-                        ImageIO.write(img, extension, outputfile);
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(null, "Error saving file", "Error", JOptionPane.ERROR_MESSAGE);
-                        ex.printStackTrace();
+                        return true;
                     }
-                }
+
+                    @Override
+                    protected void bgWork() {
+                        img = GuiUtilities.getInstance().scaleToSave(img);
+                        System.out.println("Scaled image: " + img);
+                    }
+
+                    @Override
+                    protected void onDone() {
+                        JFileChooser fileChooser = new JFileChooser("C:/");
+                        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "png"));
+                        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("gif", "gif"));
+                        fileChooser.setAcceptAllFileFilterUsed(false);
+
+                        if(fileChooser.showDialog(null, "Save") == JFileChooser.APPROVE_OPTION) {
+                            try {
+                                String extension = fileChooser.getFileFilter().getDescription();
+                                File outputfile = new File(fileChooser.getSelectedFile().getAbsolutePath() + "." + extension);
+                                if (outputfile.exists()) {
+                                    int result = JOptionPane.showConfirmDialog(null, "The file already exists, do you want to overwrite it?", "File already exists", JOptionPane.YES_NO_OPTION);
+                                    if (result == JOptionPane.YES_OPTION) {
+                                        outputfile.delete();
+                                    } else {
+                                        return;
+                                    }
+                                }
+                                ImageIO.write(img, extension, outputfile);
+                            } catch (IOException ex) {
+                                JOptionPane.showMessageDialog(null, "Error saving file", "Error", JOptionPane.ERROR_MESSAGE);
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+                };
+
+                loading.show();
             }
         });
 
@@ -158,10 +186,15 @@ public class MainView {
         fileChooser.setFileFilter(filter);
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
         if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            LoadingWindow.show("Loading Maze", () -> {
-                centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
-                fileTextField.setText(fileChooser.getSelectedFile().getName());
-            });
+            LoadingWindow loading = new LoadingWindow("Loading Maze") {
+                @Override
+                protected void bgWork() {
+                    centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
+                    fileTextField.setText(fileChooser.getSelectedFile().getName());
+                }
+            };
+
+            loading.show();
         }
     }
 

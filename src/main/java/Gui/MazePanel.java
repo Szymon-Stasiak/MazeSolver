@@ -69,13 +69,17 @@ public class MazePanel extends ImagePanel {
     }
 
     public void solveMaze() {
-        LoadingWindow.show("Solving maze",  () -> {
-            if (maze == null) return;
-            maze.clearMaze();
-            MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
-            changeImage(GuiUtilities.getInstance().mazeToImage(maze));
-            solved = true;
-        });
+        LoadingWindow loading = new LoadingWindow("Solving maze") {
+            @Override
+            protected void bgWork() {
+                if (maze == null) return;
+                maze.clearMaze();
+                MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
+                changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+                solved = true;
+            }
+        };
+        loading.show();            
     }
 
     //SET NEW START

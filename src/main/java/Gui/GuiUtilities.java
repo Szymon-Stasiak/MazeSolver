@@ -1,10 +1,14 @@
 package Gui;
 
 import Maze.Maze;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
 
 public class GuiUtilities {
     public static GuiUtilities instance;
+
+    private int saveScale = 10;
 
     BufferedImage mazeToImage(Maze maze) {
         int width = maze.getMaze().get(0).size();
@@ -23,6 +27,17 @@ public class GuiUtilities {
             }
         }
         return img;
+    }
+
+    public BufferedImage scaleToSave(BufferedImage img) {
+        Image scaleImg = img.getScaledInstance(img.getWidth() * saveScale, img.getHeight() * saveScale, BufferedImage.SCALE_REPLICATE);
+
+        BufferedImage bimage = new BufferedImage(img.getWidth(null) * saveScale, img.getHeight(null) * saveScale, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(scaleImg, 0, 0, null);
+        bGr.dispose();
+        return bimage;
     }
 
     public synchronized static GuiUtilities getInstance() {
