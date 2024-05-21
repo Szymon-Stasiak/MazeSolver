@@ -1,5 +1,3 @@
-import Maze.Maze;
-import Maze.MazeSolver;
 import Gui.MainView;
 
 class Main {

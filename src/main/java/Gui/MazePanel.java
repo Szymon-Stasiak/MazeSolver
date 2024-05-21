@@ -37,6 +37,12 @@ public class MazePanel extends ImagePanel {
     //MAZE
     private Maze maze;
 
+    private int pathRgb = Color.RED.getRGB();
+    private int startRgb = Color.YELLOW.getRGB();
+    private int endRgb = Color.BLUE.getRGB();
+    private int selectRgb = Color.GREEN.getRGB();
+    private int emptyRgb = Color.WHITE.getRGB();
+
     public MazePanel() {
         super();
         resetRGB = new LinkedList<>();
@@ -63,21 +69,25 @@ public class MazePanel extends ImagePanel {
     }
 
     public void solveMaze() {
-        LoadingWindow.show("Solving maze",  () -> {
-            if (maze == null) return;
-            maze.clearMaze();
-            MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
-            changeImage(GuiUtilities.getInstance().mazeToImage(maze));
-            solved = true;
-        });
+        LoadingWindow loading = new LoadingWindow("Solving maze") {
+            @Override
+            protected void bgWork() {
+                if (maze == null) return;
+                maze.clearMaze();
+                MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
+                changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+                solved = true;
+            }
+        };
+        loading.show();            
     }
 
     //SET NEW START
     public void setStartNode(Point startNode) {
-        if(solved) {
-            resetRGB.add(new Pixel(this.startNode, Color.RED.getRGB()));
+        if(solved && !autoSolve) {
+            resetRGB.add(new Pixel(this.startNode, pathRgb));
         } else {
-            resetRGB.add(new Pixel(this.startNode, Color.WHITE.getRGB()));
+            resetRGB.add(new Pixel(this.startNode, emptyRgb));
         }
 
         this.startNode = startNode;
@@ -87,10 +97,10 @@ public class MazePanel extends ImagePanel {
 
     //SET NEW END
     public void setEndNode(Point endNode) {
-        if(solved) {
-            resetRGB.add(new Pixel(this.endNode, Color.RED.getRGB()));
+        if(solved && !autoSolve) {
+            resetRGB.add(new Pixel(this.endNode, pathRgb));
         } else {
-            resetRGB.add(new Pixel(this.endNode, Color.WHITE.getRGB()));
+            resetRGB.add(new Pixel(this.endNode, emptyRgb));
         }
 
         this.endNode = endNode;
@@ -100,6 +110,7 @@ public class MazePanel extends ImagePanel {
 
     //SET AUTOSOLVE
     public void setAutoSolve(boolean autoSolve) {
+        if(!solved) solveMaze();
         this.autoSolve = autoSolve;
     }
 
@@ -130,8 +141,12 @@ public class MazePanel extends ImagePanel {
                     setEndNode(mazePos);
                 } };
 
-                OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, e.getPoint(), options, actions, () -> {
-                    resetRGB.add(new Pixel(selectPoint, Color.WHITE.getRGB()));
+                OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, MouseInfo.getPointerInfo().getLocation(), options, actions, () -> {
+                    if(pointToNode(mazePos).getIsPath()) {
+                        resetRGB.add(new Pixel(mazePos, pathRgb));
+                    } else {
+                        resetRGB.add(new Pixel(mazePos, emptyRgb));
+                    }
                     selectPoint = null;
                     repaint();
                 });
@@ -157,12 +172,11 @@ public class MazePanel extends ImagePanel {
         while(!resetRGB.isEmpty()) {
             Pixel p = resetRGB.poll();
             if(p == null || p.pos == null) continue;
-            System.out.println("Deleting: " + p.pos);
             img.setRGB(p.pos.x, p.pos.y, p.rgb);
         }
 
-        if(selectPoint != null) img.setRGB(selectPoint.x, selectPoint.y, Color.GREEN.getRGB());
-        if(startNode != null) img.setRGB(startNode.x, startNode.y, Color.YELLOW.getRGB());
-        if(endNode != null) img.setRGB(endNode.x, endNode.y, Color.BLUE.getRGB());
+        if(selectPoint != null) img.setRGB(selectPoint.x, selectPoint.y, selectRgb);
+        if(startNode != null) img.setRGB(startNode.x, startNode.y, startRgb);
+        if(endNode != null) img.setRGB(endNode.x, endNode.y, endRgb);
     }
 }

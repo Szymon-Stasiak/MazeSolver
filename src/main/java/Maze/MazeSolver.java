@@ -5,7 +5,7 @@ import java.util.Queue;
 
 public class MazeSolver {
 
-    public static void soleMaze(int startX, int startY, int endX, int endY, Maze maze) {
+    public static void solveMaze(int startX, int startY, int endX, int endY, Maze maze) {
         Node start = maze.getMaze().get(startX).get(startY);
         Node end = maze.getMaze().get(endX).get(endY);
         solveMaze(start, end, maze);
