@@ -142,7 +142,35 @@ public class MainView {
         panel.add(saveButton);
     }
 
+
     private void addSettingsButtons(JPanel panel) {
+        JButton settingsButton = new JButton("Settings");
+        ImageIcon settingsIcon = new ImageIcon(System.getProperty("user.dir") + "/src/main/graphics/settings.png");
+        settingsIcon.setImage(settingsIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
+        settingsButton.setIcon(settingsIcon);
+        settingsButton.setPreferredSize(new Dimension(110, 40));
+        settingsButton.setOpaque(false);
+        settingsButton.setContentAreaFilled(false);
+        settingsButton.setBorderPainted(false);
+        settingsButton.setFocusable(false);
+        settingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        settingsButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+
+        settingsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                SettingsView.get(MainView.instance).setVisible(true);
+            }
+        });
+
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(settingsButton);
+    }
+
+    private JPanel createLeftPanel() {
+        JPanel panel = new JPanel();
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        
         JCheckBox autoSolve = new JCheckBox("Auto Solve");
         autoSolve.setFocusable(false);
         autoSolve.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -152,18 +180,12 @@ public class MainView {
                 centerPanel.setAutoSolve(autoSolve.isSelected());
             }
         });
-        panel.add(autoSolve);
-    }
 
-    private JPanel createLeftPanel() {
-        JPanel panel = new JPanel();
-
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        
+        addSettingsButtons(panel);
         panel.add(Box.createVerticalGlue());
         addMainButtons(panel);
         panel.add(Box.createVerticalGlue());
-        addSettingsButtons(panel);
+        panel.add(autoSolve);
         
         panel.setBackground(new Color(0xE5E1DA));
         return panel;
