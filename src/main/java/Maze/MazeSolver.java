@@ -5,15 +5,15 @@ import java.util.Queue;
 
 public class MazeSolver {
 
-    public static void solveMaze(int startX, int startY, int endX, int endY, Maze maze) {
+    public static boolean solveMaze(int startX, int startY, int endX, int endY, Maze maze) {
         Node start = maze.getMaze().get(startX).get(startY);
         Node end = maze.getMaze().get(endX).get(endY);
-        solveMaze(start, end, maze);
+        return solveMaze(start, end, maze);
     }
 
-    public static void solveMaze(Node start, Node end, Maze maze) {
+    public static boolean solveMaze(Node start, Node end, Maze maze) {
         makeParentBFS(end, start);
-        markPath(start, end);
+        return  markPath(start, end);
     }
 
     public static void makeParentBFS(Node start, Node end) {
@@ -36,25 +36,19 @@ public class MazeSolver {
         }
     }
 
-    public static void markPath(Node start, Node end) {
+ public static boolean  markPath(Node start, Node end) {
         Node current = start;
         while (current != end) {
+            if (current == null) {
+                return false;
+            }
             current.setIsPath(true);
             current = current.getParent();
         }
         end.setIsPath(true);
-
+        return true;
     }
 
-    public static void setPath(Node start, Node end) {
-        Node current = start;
-
-        while (current != end) {
-            current.setIsPath(true);
-            current = current.getParent();
-        }
-        end.setIsPath(true);
-    }
 
 }
 
