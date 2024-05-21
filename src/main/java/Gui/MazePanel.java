@@ -141,7 +141,7 @@ public class MazePanel extends ImagePanel {
                     setEndNode(mazePos);
                 } };
 
-                OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, e.getPoint(), options, actions, () -> {
+                OptionMenu menu = new OptionMenu("X: " + mazePos.x + " Y: " + mazePos.y, MouseInfo.getPointerInfo().getLocation(), options, actions, () -> {
                     if(pointToNode(mazePos).getIsPath()) {
                         resetRGB.add(new Pixel(mazePos, pathRgb));
                     } else {
