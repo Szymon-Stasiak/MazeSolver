@@ -81,6 +81,10 @@ public class MainView {
                         img = centerPanel.getImage();
 
                         if(img.getWidth() * img.getHeight() > warningSize.width * warningSize.height) {
+                            if(SettingsView.getDisableWarning()) {
+                                return true;
+                            }
+                            
                             int result = JOptionPane.showConfirmDialog(null, "The maze is large, do you wish to continue?", "Warning", JOptionPane.YES_NO_OPTION);
                             if (result == JOptionPane.NO_OPTION) {
                                 return false;
@@ -107,12 +111,16 @@ public class MainView {
                                 String extension = fileChooser.getFileFilter().getDescription();
                                 File outputfile = new File(fileChooser.getSelectedFile().getAbsolutePath() + "." + extension);
                                 if (outputfile.exists()) {
-                                    int result = JOptionPane.showConfirmDialog(null, "The file already exists, do you want to overwrite it?", "File already exists", JOptionPane.YES_NO_OPTION);
-                                    if (result == JOptionPane.YES_OPTION) {
+                                    if(SettingsView.getDisableWarning()) {
                                         outputfile.delete();
                                     } else {
-                                        return;
-                                    }
+                                        int result = JOptionPane.showConfirmDialog(null, "The file already exists, do you want to overwrite it?", "File already exists", JOptionPane.YES_NO_OPTION);
+                                        if (result == JOptionPane.YES_OPTION) {
+                                            outputfile.delete();
+                                        } else {
+                                            return;
+                                        }
+                                    }            
                                 }
                                 ImageIO.write(img, extension, outputfile);
                             } catch (IOException ex) {
@@ -231,5 +239,9 @@ public class MainView {
         frame.add(leftPanel, BorderLayout.WEST);
         frame.add(centerPanel, BorderLayout.CENTER);
         frame.setVisible(true);
+    }
+
+    public MazePanel getMazePanel() {
+        return centerPanel;
     }
 }
