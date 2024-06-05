@@ -1,7 +1,7 @@
 package Maze;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -13,8 +13,17 @@ public class Maze {
 
     private Node end;
 
-    public Maze(String filename) {
+    public File fileWithMazeTxt(String filename) throws IOException {
         File file = new File(filename);
+        if(file.exists() && filename.toLowerCase().endsWith(".bin")) {
+            return new File("src/main/resources/decodedMaze.txt");
+        }
+
+        return file;
+    }
+
+    public Maze(String filename) throws IOException {
+        File file = fileWithMazeTxt(filename);
         maze = new Vector<>();
         try {
             Scanner scanner = new Scanner(file);
@@ -88,4 +97,7 @@ public class Maze {
             }
         }
     }
+
+
+
 }

@@ -211,7 +211,11 @@ public class MainView {
             LoadingWindow loading = new LoadingWindow("Loading Maze") {
                 @Override
                 protected void bgWork() {
-                    centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
+                    try {
+                        centerPanel.changeMaze(new Maze(fileChooser.getSelectedFile().getAbsolutePath()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     fileTextField.setText(fileChooser.getSelectedFile().getName());
                 }
             };
