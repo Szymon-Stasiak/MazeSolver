@@ -7,6 +7,8 @@ import java.awt.event.*;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import javax.swing.JOptionPane;
+
 class Pixel {
     public Point pos;
     public int rgb;
@@ -42,6 +44,7 @@ public class MazePanel extends ImagePanel {
     private int endRgb = Color.BLUE.getRGB();
     private int selectRgb = Color.GREEN.getRGB();
     private int emptyRgb = Color.WHITE.getRGB();
+    private int wallRgb = Color.BLACK.getRGB();
 
     public MazePanel() {
         super();
@@ -65,18 +68,30 @@ public class MazePanel extends ImagePanel {
         endNode = nodeToPoint(maze.getEnd());
         resetRGB.clear();
         if(autoSolve) solveMaze();
-        else changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+        else changeImage(GuiUtilities.getInstance().mazeToImage(maze, pathRgb, wallRgb, emptyRgb));
     }
 
     public void solveMaze() {
         LoadingWindow loading = new LoadingWindow("Solving maze") {
+            boolean hasExit = true;
             @Override
             protected void bgWork() {
                 if (maze == null) return;
                 maze.clearMaze();
-                MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
-                changeImage(GuiUtilities.getInstance().mazeToImage(maze));
+                boolean output = MazeSolver.solveMaze(pointToNode(startNode), pointToNode(endNode), maze);
+                if (!output) {
+                    hasExit = false;
+                    return;
+                }
+                changeImage(GuiUtilities.getInstance().mazeToImage(maze, pathRgb, wallRgb, emptyRgb));
                 solved = true;
+            }
+
+            @Override
+            protected void onDone() {
+                if (!hasExit && !SettingsView.getDisableWarning()) {
+                    JOptionPane.showMessageDialog(null, "The maze has no exit", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         };
         loading.show();            
@@ -178,5 +193,75 @@ public class MazePanel extends ImagePanel {
         if(selectPoint != null) img.setRGB(selectPoint.x, selectPoint.y, selectRgb);
         if(startNode != null) img.setRGB(startNode.x, startNode.y, startRgb);
         if(endNode != null) img.setRGB(endNode.x, endNode.y, endRgb);
+    }
+
+    public int getPathColor() {
+        return pathRgb;
+    }
+
+    public int getStartColor() {
+        return startRgb;
+    }
+
+    public int getEndColor() {
+        return endRgb;
+    }
+
+    public int getSelectColor() {
+        return selectRgb;
+    }
+
+    public int getEmptyColor() {
+        return emptyRgb;
+    }
+
+    public int getWallColor() {
+        return wallRgb;
+    }
+
+    public void setPathColor(int pathRgb) {
+        this.pathRgb = pathRgb;
+        repaint();
+    }
+
+    public void setStartColor(int startRgb) {
+        this.startRgb = startRgb;
+        repaint();
+    }
+
+    public void setEndColor(int endRgb) {
+        this.endRgb = endRgb;
+        repaint();
+    }
+
+    public void setSelectColor(int selectRgb) {
+        this.selectRgb = selectRgb;
+        repaint();
+    }
+
+    public void setEmptyColor(int emptyRgb) {
+        this.emptyRgb = emptyRgb;
+        repaint();
+    }
+
+    public void setWallColor(int wallRgb) {
+        this.wallRgb = wallRgb;
+        repaint();
+    }
+
+    public boolean isSolved() {
+        return solved;
+    }
+
+    public void redrawMaze() {
+        if(maze == null) return;
+        LoadingWindow loading = new LoadingWindow("Redrawing maze") {
+            @Override
+            protected void bgWork() {
+                changeImage(GuiUtilities.getInstance().mazeToImage(maze, pathRgb, wallRgb, emptyRgb));
+            }
+        };
+
+        loading.show();
     }
 }

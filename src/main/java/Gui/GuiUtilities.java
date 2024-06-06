@@ -8,9 +8,9 @@ import java.awt.Graphics2D;
 public class GuiUtilities {
     public static GuiUtilities instance;
 
-    private int saveScale = 10;
+    private int saveScale = 5;
 
-    BufferedImage mazeToImage(Maze maze) {
+    BufferedImage mazeToImage(Maze maze, int pathRgb, int wallRgb, int emptyRgb) {
         int width = maze.getMaze().get(0).size();
         int height = maze.getMaze().size();
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -18,11 +18,11 @@ public class GuiUtilities {
             for (int j = 0; j < width; j++) {
                 
                 if (maze.getMaze().get(i).get(j).getIsPath()) {
-                    img.setRGB(j, i, 0xFF0000);
+                    img.setRGB(j, i, pathRgb);
                 } else if(maze.getMaze().get(i).get(j).getIsField()) {
-                    img.setRGB(j, i, 0xFFFFFF);
+                    img.setRGB(j, i, emptyRgb);
                 } else {
-                    img.setRGB(j, i, 0x000000);
+                    img.setRGB(j, i, wallRgb);
                 }
             }
         }
@@ -45,5 +45,13 @@ public class GuiUtilities {
             instance = new GuiUtilities();
         }
         return instance;
+    }
+
+    public int getSaveScale() {
+        return saveScale;
+    }
+
+    public void setSaveScale(int saveScale) {
+        this.saveScale = saveScale;
     }
 }

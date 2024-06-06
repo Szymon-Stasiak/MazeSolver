@@ -25,6 +25,8 @@ public abstract class LoadingWindow extends SwingWorker<Void, Void> {
         loadingWindow.setUndecorated(true); // Make the window frameless
         loadingWindow.setSize(300, 100);
         loadingWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        loadingWindow.setResizable(false);
+        loadingWindow.setAlwaysOnTop(true);
 
         progressBar = new JProgressBar();
         progressBar.setIndeterminate(true);
@@ -35,8 +37,7 @@ public abstract class LoadingWindow extends SwingWorker<Void, Void> {
         loadingWindow.setVisible(true);
 
         loadingWindow.setLocationRelativeTo(null);
-        loadingWindow.setAlwaysOnTop(true);
-
+        
         bgWork();
         return null;
     }
