@@ -212,7 +212,7 @@ public class MainView {
     private void uploadMaze(JTextField fileTextField) {
         
         JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Maze file", "txt", "bin");
         fileChooser.setFileFilter(filter);
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir") + "/src/main/resources"));
         if(fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {

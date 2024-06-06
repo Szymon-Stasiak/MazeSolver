@@ -16,7 +16,8 @@ public class Maze {
     public File fileWithMazeTxt(String filename) throws IOException {
         File file = new File(filename);
         if(file.exists() && filename.toLowerCase().endsWith(".bin")) {
-            return new File("src/main/resources/decodedMaze.txt");
+            Binary.convertBinaryToText(filename);
+            return new File(System.getProperty("user.dir") + "/src/main/resources/decodedMaze.txt");
         }
 
         return file;
@@ -46,6 +47,7 @@ public class Maze {
             }
             scanner.close();
         } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
             System.out.println("No file found: " + filename);
         }
         setNeighbours();
