@@ -44,7 +44,7 @@ public class Binary {
 
 
     public static void convertBinaryToText(String binaryFilePath) throws IOException {
-        String textFilePath = "src/main/resources/decodedMaze.txt";
+        String textFilePath = System.getProperty("user.dir") + "/src/main/resources/decodedMaze.txt";
 
         try (DataInputStream binaryFile = new DataInputStream(new FileInputStream(binaryFilePath)); BufferedWriter textFile = new BufferedWriter(new FileWriter(textFilePath))) {
 
@@ -56,10 +56,7 @@ public class Binary {
             int entryY = readUnsignedShortLittleEndian(binaryFile);
             int exitX = readUnsignedShortLittleEndian(binaryFile);
             int exitY = readUnsignedShortLittleEndian(binaryFile);
-
             binaryFile.skipBytes(12);
-
-
             long counter = readUnsignedIntLittleEndian(binaryFile);
             long solutionOffset = readUnsignedIntLittleEndian(binaryFile);
             int separator = binaryFile.readUnsignedByte();
@@ -71,18 +68,19 @@ public class Binary {
             if (solutionOffset > 0) {
                 binaryFile.skipBytes((int) (solutionOffset - 40));
             }
-            generateMazeFromEncoding(binaryFile, textFile, counter, separator, wall, columns, lines, entryX, entryY, exitX, exitY);
+            generateMazeFromEncoding(binaryFile, textFile, counter, separator, wall, path, columns, lines, entryX, entryY, exitX, exitY);
         }
     }
 
-    private static void generateMazeFromEncoding(DataInputStream binaryFile, BufferedWriter textFile, long wordCount, int separator, int wall, int cols, int rows, int entryX, int entryY, int exitX, int exitY) throws IOException {
+
+
+    private static void generateMazeFromEncoding(DataInputStream binaryFile, BufferedWriter textFile, long wordCount, int separator, int wall, int path, int cols, int rows, int entryX, int entryY, int exitX, int exitY) throws IOException {
         int cellsProcessed = 0;
         int currentRow = 1, currentCol = 1;
-
         while (wordCount-- > 0 && cellsProcessed < cols * rows) {
-            int byteRead = binaryFile.readUnsignedByte(); // Read separator
+            int byteRead = binaryFile.readUnsignedByte();
             if (byteRead != separator) {
-                throw new IOException("Wrong separator");
+                throw new IOException("Invalid separator");
             }
 
             int value = binaryFile.readUnsignedByte();
@@ -93,6 +91,7 @@ public class Binary {
                     textFile.write('P');
                 } else if (currentRow == exitY && currentCol == exitX) {
                     textFile.write('K');
+                } else {
                     textFile.write(value == wall ? 'X' : ' ');
                 }
 
@@ -106,6 +105,9 @@ public class Binary {
             }
         }
     }
+
+
+
 
     public static void convertTextToBinary(String textFilePath, String binaryFilePath) throws IOException {
         try (RandomAccessFile binaryFile = new RandomAccessFile(binaryFilePath, "rw"); BufferedReader textFile = new BufferedReader(new FileReader(textFilePath))) {
